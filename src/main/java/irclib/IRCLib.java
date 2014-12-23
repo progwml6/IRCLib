@@ -55,7 +55,9 @@ public class IRCLib extends Thread {
         this.bConnected = true;
         this.out = new BufferedWriter(new OutputStreamWriter(this.socket.getOutputStream()));
         this.in = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
-        this.start();
+        if (!this.isAlive()) {
+            this.start();
+        }
         if (!this.SASLUser.isEmpty() && !this.SASLPass.isEmpty()) {
             this.out.write("CAP REQ :sasl\n");
         }
@@ -82,6 +84,7 @@ public class IRCLib extends Thread {
     public void close () throws IOException {
         this.bConnected = false;
         this.socket.close();
+        this.in = null;
     }
 
     public String getServer () {
@@ -281,8 +284,13 @@ public class IRCLib extends Thread {
     public void run () {
         try {
             String line = null;
-            while (this.in != null && (line = this.in.readLine()) != null) {
-                this.process(line);
+            while (this.in != null) {
+                if ((line = this.in.readLine()) != null) {
+                    process(line);
+                } else if (!bConnected || !socket.isConnected()) {
+                    socket.close();
+                    connect(socket.getInetAddress().getHostAddress(), socket.getPort());
+                }
             }
         } catch (IOException ex) {
             System.out.println("[IRCLIB]" + ex.getMessage() == null ? "null" : ex.getMessage());
