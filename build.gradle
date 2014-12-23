@@ -1,0 +1,58 @@
+apply plugin: 'maven'
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+
+configurations {
+    deployerJars
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile 'com.google.guava:guava:17.0'//general utility classes
+    deployerJars 'org.apache.maven.wagon:wagon-ftp:2.2'
+}
+
+project.ext {
+    currentYear = '2014'
+}
+if (System.getenv().BUILD_NUMBER != null) {
+    ext.buildNum = System.getenv().BUILD_NUMBER
+} else {
+    ext.buildNum = "9999999"
+}
+
+group = 'irclib'
+version = "1.0.0-${project.buildNum}"
+description = "IRCLib"
+sourceCompatibility = 1.6
+targetCompatibility = 1.6
+
+def gitSha() {
+    return 'git rev-parse HEAD'.execute().text.trim()
+}
+
+if (project.hasProperty("local_maven")) {
+    apply plugin: 'maven'
+        uploadArchives {
+            repositories {
+                mavenDeployer {
+                    repository(url: "file://${local_maven}")
+            }
+        }
+    }
+}
+if (project.hasProperty("remote_maven")) {
+    apply plugin: 'maven'
+    uploadArchives {
+        repositories.mavenDeployer {
+            configuration = configurations.deployerJars
+            repository(url: "ftp://${remote_maven}") {
+                authentication(userName: "${ftp_username}", password: "${ftp_pass}")
+            }
+        }
+    }
+}
