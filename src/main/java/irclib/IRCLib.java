@@ -229,8 +229,7 @@ public class IRCLib extends Thread {
                         this.processCTCP(iUser.group(1), iUser.group(2), iUser.group(3), sParsed[2],
                                 sLine.split(" ", 4)[3].replaceFirst(":", "").substring(1, sLine.split(" ", 4)[3].replaceFirst(":", "").length() - 1));
                     }
-                }
-                else if (iUser == null) {
+                } else if (iUser == null) {
                     this.onMessage(sOrigin, sParsed[2], sLine.split(" ", 4)[3].replaceFirst(":", ""));
                 } else {
                     String m = sLine.split(" ", 4)[3].replaceFirst(":", "");
@@ -377,8 +376,9 @@ public class IRCLib extends Thread {
     }
 
     public boolean registerCommand (String command, IRCCommand callback) {
-        if(commands.containsKey(command))
+        if (commands.containsKey(command)) {
             return false;
+        }
         commands.put(command, callback);
         return true;
     }
@@ -398,7 +398,8 @@ public class IRCLib extends Thread {
     public ImmutableMap getCommands () {
         return ImmutableMap.builder().putAll(commands).build();
     }
-    public void addColoring(Coloring c) {
+
+    public void addColoring (Coloring c) {
         colorings.add(c);
     }
 
@@ -406,7 +407,7 @@ public class IRCLib extends Thread {
      * WARNING: DO NOT MODIFY THIS LIST!!!!
      * @return list of colorings
      */
-    public List<Coloring> getColorings() {
+    public List<Coloring> getColorings () {
         return colorings;
     }
 }
