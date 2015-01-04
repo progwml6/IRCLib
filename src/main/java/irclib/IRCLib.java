@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-//IRCLIB source c/o of procyon decompiler-- needed in order to run logging of messages during MC version updates for testing
 public class IRCLib extends Thread {
     public BufferedWriter out;
     public BufferedReader in;
@@ -36,7 +35,7 @@ public class IRCLib extends Thread {
 
     public IRCLib () {
         super();
-        this.lChannel = new ArrayList<String>();
+        this.lChannel = Lists.newArrayList();
         this.sName = "sdIRC";
         this.sUser = "sdIRC";
         this.sKey = "";
@@ -151,8 +150,11 @@ public class IRCLib extends Thread {
         return false;
     }
 
+    private static String validNick = "[A-}][0-9A-}-]*";
+    private static String validUser = "(?:(?=[\u0001-\u00ff])[^\\s@])+";
+    private static Pattern mask = Pattern.compile(":("+validNick+")!("+validUser+")@("+validUser+')');
     protected Matcher parseMask (final String m) {
-        final Matcher iUser = Pattern.compile(":(.*)!(.*)@(.*)").matcher(m);
+        final Matcher iUser = mask.matcher(m);
         return iUser.matches() ? iUser : null;
     }
 
@@ -182,9 +184,11 @@ public class IRCLib extends Thread {
             this.sendRaw("CAP END");
         } else if (!sCommand.toUpperCase().trim().equals("432")) {
             if (sCommand.toUpperCase().trim().equals("NICK")) {
-                final String snNick = sParsed[0].split("!")[0].replaceFirst(":", "");
-                if (snNick.equals(this.sNick)) {
+                Matcher iUser = parseMask(sParsed[0]);
+                String snNick = sParsed[0].split("!")[0].replaceFirst(":", "");
+                if (iUser != null && iUser.group(1).equals(this.sNick)) {
                     this.sNick = sParsed[2].replaceFirst(":", "");
+                    onNick(snNick, this.sNick);
                 }
                 this.onNick(snNick, sParsed[2].replaceFirst(":", ""));
             } else if (sCommand.toUpperCase().trim().equals("JOIN")) {
@@ -375,6 +379,12 @@ public class IRCLib extends Thread {
     public void onNotice (final String s, final String d, final String m) {
     }
 
+    /**
+     *
+     * @param command the command to register ex: !players or !tps
+     * @param callback the IRCCommand to run when this command is entered
+     * @return true if the command is successfully registered, false if it is not registered
+     */
     public boolean registerCommand (String command, IRCCommand callback) {
         if (commands.containsKey(command)) {
             return false;
@@ -383,22 +393,35 @@ public class IRCLib extends Thread {
         return true;
     }
 
+    /**
+     *
+     * @param command the command to check
+     * @return true if the command is registered, false otherwise
+     */
     public boolean isCommandRegistered (String command) {
         return commands.containsKey(command);
     }
 
+    /**
+     * removes a command if it exists
+     * @param command command to remove
+     */
     public void removeCommand (String command) {
         commands.remove(command);
     }
 
     /**
      *
-     * @return Immutable Map of commands & their callbacks
+     * @return Immutable Map of commands and their callbacks
      */
     public ImmutableMap getCommands () {
         return ImmutableMap.builder().putAll(commands).build();
     }
 
+    /**
+     *
+     * @param c coloring to process during chat events
+     */
     public void addColoring (Coloring c) {
         colorings.add(c);
     }
