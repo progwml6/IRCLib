@@ -242,7 +242,7 @@ public class IRCLib extends Thread {
                     if (commands.containsKey(v[0])) {
                         temp = commands.get(v[0]).onCommand(m);
                     }
-                    if (temp != null) {
+                    if (temp == null) {
                         this.onMessage(iUser.group(1), iUser.group(2), iUser.group(3), sParsed[2], m);
                     } else {
                         for (String s : temp) {
