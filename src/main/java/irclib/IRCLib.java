@@ -82,7 +82,9 @@ public class IRCLib extends Thread {
 
     public void close () throws IOException {
         this.bConnected = false;
-        this.socket.close();
+        if(this.socket != null) {
+            this.socket.close();
+        }
         this.in = null;
     }
 
